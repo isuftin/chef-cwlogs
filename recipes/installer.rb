@@ -20,15 +20,23 @@ directory '/opt/aws/cloudwatch' do
 end
 
 remote_file '/opt/aws/cloudwatch/awslogs-agent-setup.py' do
-  source 'https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py'
+  source node['cwlogs']['installation_file_source']
   mode '0755'
   action node['cwlogs']['attempt_upgrade'] ? :create : :create_if_missing
 end
 
 proxy_env = ENV.select { |k, v| %w(http_proxy https_proxy no_proxy).include?(k) && !v.empty? }
 proxy_args = proxy_env.map { |k,v| "--#{k.gsub('_','-')} '#{v}'" }.join(' ')
+python_bin_dir = node['cwlogs']['python_bin_dir']
+ca_bundle = node['cwlogs']['ca_bundle']
+python_flag = if !python_bin_dir.nill && ! python_bin_dir.strip.empty?then "--python=#{python_bin_dir}" else '' end 
+environment = {
+  'REQUESTS_CA_BUNDLE' => if ! ca_bundle.nil? && ! ca_bundle.strip.empty? then ca_bundle else '' end 
+}
+
 execute 'Install CloudWatch Logs agent' do
-  command "/opt/aws/cloudwatch/awslogs-agent-setup.py -n -r #{node['cwlogs']['region']} -c /tmp/cwlogs.cfg #{proxy_args}"
+  command "/opt/aws/cloudwatch/awslogs-agent-setup.py -n #{python_flag} -r #{node['cwlogs']['region']} -c /tmp/cwlogs.cfg #{proxy_args}"
+  environment environment
   guard_interpreter :bash
-  not_if 'pgrep -f awslogs-agent-setup >/dev/null'
+  not_if 'pgrep -f awslogs >/dev/null'
 end
