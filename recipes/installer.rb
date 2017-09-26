@@ -1,8 +1,8 @@
 proxy_env = ENV.select { |k, v| %w(http_proxy https_proxy no_proxy).include?(k) && !v.empty? }
 proxy_args = proxy_env.map { |k,v| "--#{k.gsub('_','-')} '#{v}'" }.join(' ')
-python_bin_dir = node['cwlogs']['python_bin_dir']
+python_bin = node['cwlogs']['python_bin']
 ca_bundle = node['cwlogs']['ca_bundle']
-python_flag = if !python_bin_dir.nil? && ! python_bin_dir.strip.empty?then "--python=#{python_bin_dir}" else '' end 
+python_flag = if ! python_bin.nil? && ! python_bin.strip.empty?then "--python=#{python_bin}" else '' end 
 environment = {
   'REQUESTS_CA_BUNDLE' => if ! ca_bundle.nil? && ! ca_bundle.strip.empty? then ca_bundle else '' end 
 }
