@@ -24,6 +24,18 @@ template '/tmp/cwlogs.cfg' do
   notifies :restart, 'service[awslogs]'
 end
 
+template '/var/awslogs/etc/awslogs.conf' do
+  source "awslogs.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
+  variables ({
+    :logfiles => node['cwlogs']['logfiles']
+  })
+  only_if  { ::File.exist?('/var/awslogs/etc/awslogs.conf') }
+  notifies :restart, 'service[awslogs]'
+end
+
 directory '/opt/aws/cloudwatch' do
   recursive true
 end
