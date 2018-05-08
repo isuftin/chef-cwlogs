@@ -21,6 +21,19 @@ template '/tmp/cwlogs.cfg' do
   variables ({
     :logfiles => node['cwlogs']['logfiles']
   })
+  not_if  { ::File.exist?('/var/awslogs/etc/awslogs.conf') }
+  notifies :restart, 'service[awslogs]'
+end
+
+template '/var/awslogs/etc/awslogs.conf' do
+  source "awslogs.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
+  variables ({
+    :logfiles => node['cwlogs']['logfiles']
+  })
+  only_if  { ::File.exist?('/var/awslogs/etc/awslogs.conf') }
   notifies :restart, 'service[awslogs]'
 end
 
